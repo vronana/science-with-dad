@@ -56,7 +56,28 @@ body.a .next{background:var(--mint);color:var(--white)}
 .ver{text-align:center;font-size:11px;color:var(--white);padding:0 0 10px}
 body.a .ver{color:var(--ink)}
 .hide{display:none}
-@media (prefers-reduced-motion:reduce){.word{animation:none}.opts.done .opt.no{animation:none}}
+.score{font-size:clamp(64px,22vw,96px);line-height:1.05;color:var(--white);margin:6px 0 4px}
+.score small{font-size:.4em;margin-left:6px}
+.rmsg{font-size:20px;line-height:1.5;color:var(--white);margin:0 0 16px;word-break:keep-all}
+.rcount{font-size:15px;color:var(--white);margin:0 0 18px}
+.again{margin:0 0 8px;font-size:15px;color:var(--white)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips .pill{background:transparent;color:var(--white);border:1.5px solid var(--white)}
+.stage{display:flex;justify-content:center;gap:6px;margin:6px 0 10px}
+.dc{width:22%;max-width:84px;overflow:visible}
+.dc .bob{animation:bob .6s ease-in-out infinite alternate;transform-origin:40px 110px}
+.dc .al{transform-origin:25px 52px;animation:armL .6s ease-in-out infinite alternate}
+.dc .ar{transform-origin:55px 52px;animation:armR .6s ease-in-out infinite alternate}
+.dc .ll{transform-origin:33px 84px;animation:legL .6s ease-in-out infinite alternate}
+.dc .lr{transform-origin:47px 84px;animation:legR .6s ease-in-out infinite alternate}
+.dc .hd{transform-origin:40px 40px;animation:tilt 1.2s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-10px) rotate(4deg)}}
+@keyframes armL{from{transform:rotate(-140deg)}to{transform:rotate(-20deg)}}
+@keyframes armR{from{transform:rotate(20deg)}to{transform:rotate(140deg)}}
+@keyframes legL{from{transform:rotate(14deg)}to{transform:rotate(-8deg)}}
+@keyframes legR{from{transform:rotate(8deg)}to{transform:rotate(-14deg)}}
+@keyframes tilt{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@media (prefers-reduced-motion:reduce){.dc *{animation:none!important}.word{animation:none}.opts.done .opt.no{animation:none}}
 </style>
 </head>
 <body>
@@ -70,7 +91,7 @@ body.a .ver{color:var(--ink)}
   <div class="ver" id="ver"></div>
 </div>
 <script>
-var VERSION = 'v1.4';
+var VERSION = 'v1.5';
 var ART_COUNT = 13;
 var CARDS = [
  {t:'힘과 운동', q:'달리던 버스가 갑자기 멈추면, 몸은 왜 앞으로 쏠릴까?', g:'버스는 멈췄는데 내 몸은 왜 안 멈출까? 한 줄씩 말해봐.', w:'관성', e:'움직이던 건 계속 움직이려 하고, 멈춰 있던 건 계속 멈춰 있으려 해. 버스가 멈춰도 내 몸은 아직 달리던 중이야.', x:'종이 밑에 동전을 놓고 종이를 휙 빼봐.'},
@@ -117,19 +138,21 @@ var OPTS = [
  [['지구 그림자가 달을 가려서','달이 스스로 모양을 바꿔서','구름이 달을 가려서','우리가 보는 달의 햇빛 받는 면이 달라져서'],3]
 ];
 var KEY='sciWithDadPos';
-var idx=0, phase='q', picked=null;
-try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.i>=0&&s.i<CARDS.length){idx=s.i;phase=s.p==='a'?'a':'q';}}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({i:idx,p:phase}));}catch(e){}}
+var idx=0, phase='q', picked=null, results=[];
+for(var z=0;z<20;z++)results.push(null);
+try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.i>=0&&s.i<CARDS.length){idx=s.i;phase=(s.p==='a'||s.p==='r')?s.p:'q';if(s.r&&s.r.length===20)results=s.r;}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({i:idx,p:phase,r:results}));}catch(e){}}
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function render(){
   var c=CARDS[idx];
   document.body.className=phase;
   picked=null;
-  document.getElementById('topic').textContent=c.t;
-  document.getElementById('count').textContent=(idx+1)+' / '+CARDS.length;
+  document.getElementById('topic').textContent=phase==='r'?'결과':c.t;
+  document.getElementById('count').textContent=phase==='r'?'':(idx+1)+' / '+CARDS.length;
   document.getElementById('ver').textContent=VERSION;
   var m=document.getElementById('main');
-  if(phase==='q'){
+  if(phase==='r'){renderResult(m);}
+  else if(phase==='q'){
     var art=idx<ART_COUNT?'<div class="art"><img src="art/card'+('0'+(idx+1)).slice(-2)+'.webp" alt="" width="800"></div>':'';
     var o=OPTS[idx][0],h='';
     for(var k=0;k<o.length;k++)h+='<button class="opt" data-k="'+k+'"><span class="n">'+(k+1)+'</span><span class="t">'+esc(o[k])+'</span></button>';
@@ -141,15 +164,54 @@ function render(){
     var avail=Math.min(m.clientWidth,440)-44-28-30;
     var len=c.w.length;
     w.style.fontSize=Math.max(28,Math.min(72,Math.floor(avail/(len*1.02))))+'px';
-    document.getElementById('next').textContent=idx===CARDS.length-1?'처음부터 다시':'다음 카드';
+    document.getElementById('next').textContent=idx===CARDS.length-1?'결과 보기':'다음 카드';
   }
-  document.getElementById('prev').classList.toggle('hide',phase==='q'||idx===0);
+  document.getElementById('prev').classList.toggle('hide',phase==='r'?false:(phase==='q'||idx===0));
   m.scrollTop=0;
   save();
+}
+function dancer(shirt,hair,skin,delay){
+  var d='animation-delay:'+delay+'s';
+  return '<svg class="dc" viewBox="0 0 80 120" aria-hidden="true"><g class="bob" style="'+d+'">'
+   +'<g class="ll" style="'+d+'"><rect x="28" y="82" width="10" height="28" rx="5" fill="#212121"/></g>'
+   +'<g class="lr" style="'+d+'"><rect x="42" y="82" width="10" height="28" rx="5" fill="#212121"/></g>'
+   +'<g class="al" style="'+d+'"><rect x="19" y="50" width="10" height="26" rx="5" fill="'+skin+'"/></g>'
+   +'<g class="ar" style="'+d+'"><rect x="51" y="50" width="10" height="26" rx="5" fill="'+skin+'"/></g>'
+   +'<rect x="22" y="48" width="36" height="42" rx="12" fill="'+shirt+'"/>'
+   +'<g class="hd" style="'+d+'"><circle cx="40" cy="30" r="17" fill="'+skin+'"/>'
+   +'<path d="M23 29a17 17 0 0 1 34 0c-6-8-13-9-17-9s-11 1-17 9z" fill="'+hair+'"/>'
+   +'<circle cx="34" cy="33" r="2" fill="#212121"/><circle cx="46" cy="33" r="2" fill="#212121"/>'
+   +'<path d="M34 39q6 6 12 0" stroke="#212121" stroke-width="2" fill="none" stroke-linecap="round"/>'
+   +'<circle cx="30" cy="38" r="3" fill="#FF9DB0" opacity=".7"/><circle cx="50" cy="38" r="3" fill="#FF9DB0" opacity=".7"/></g>'
+   +'</g></svg>';
+}
+function renderResult(m){
+  var ok=0,i,wrong=[];
+  for(i=0;i<results.length;i++){if(results[i]===true)ok++;else wrong.push(CARDS[i].w);}
+  var pts=ok*5,msg;
+  if(pts===100)msg='만점이다! 오늘 완전 정복했어';
+  else if(pts>=80)msg='거의 다 왔어! 몇 개만 다시 보자';
+  else if(pts>=60)msg='좋아, 절반은 넘었어! 틀린 개념만 다시 한 판';
+  else msg='괜찮아, 이제부터 잡으면 돼. 다시 한 판 가자';
+  var h='';
+  if(pts===100){
+    h+='<div class="stage">'+dancer('#FFFFFF','#212121','#FFC9C0',0)+dancer('#FFD43B','#7B3F00','#F2B8A0',.15)+dancer('#FF6B8B','#212121','#FFC9C0',.3)+dancer('#212121','#FFD43B','#F2B8A0',.45)+'</div>';
+  }
+  h+='<p class="score big">'+pts+'<small>점</small></p><p class="rcount">'+CARDS.length+'문제 중 '+ok+'개 맞혔어</p><p class="rmsg">'+esc(msg)+'</p>';
+  if(wrong.length){
+    h+='<p class="again">다시 볼 개념</p><div class="chips">';
+    for(i=0;i<wrong.length;i++)h+='<span class="pill">'+esc(wrong[i])+'</span>';
+    h+='</div>';
+  }
+  m.innerHTML=h;
+  document.getElementById('next').textContent='처음부터 다시';
+  if(pts===100)setTimeout(function(){if(phase==='r')fireworks();},250);
 }
 function pick(k){
   if(picked!==null)return;
   picked=k;
+  if(results[idx]===null)results[idx]=(k===OPTS[idx][1]);
+  save();
   var ans=OPTS[idx][1],box=document.getElementById('opts'),bs=box.children;
   box.className='opts done';
   for(var i=0;i<bs.length;i++){
@@ -189,10 +251,13 @@ document.getElementById('main').addEventListener('click',function(e){
 });
 function forward(){
   if(phase==='q'){phase='a';}
-  else{idx=(idx+1)%CARDS.length;phase='q';}
+  else if(phase==='r'){idx=0;phase='q';results=[];for(var z=0;z<20;z++)results.push(null);}
+  else if(idx===CARDS.length-1){phase='r';}
+  else{idx++;phase='q';}
   render();
 }
 function back(){
+  if(phase==='r'){phase='a';render();return;}
   if(idx>0){idx--;phase='q';render();}
 }
 document.getElementById('next').addEventListener('click',forward);
