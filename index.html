@@ -27,11 +27,16 @@ body.a .count{color:var(--ink)}
 .art{background:var(--white);border-radius:20px;padding:10px;margin:0 0 18px}
 .art img{display:block;width:100%;height:auto;border-radius:12px}
 .opts{display:flex;flex-direction:column;gap:9px;margin:0 0 12px}
-.opt{font:inherit;font-size:15px;line-height:1.45;text-align:left;word-break:keep-all;background:var(--white);color:var(--ink);border:2px solid var(--white);border-radius:99px;padding:11px 18px;cursor:pointer}
+.opt{font:inherit;font-size:15px;line-height:1.45;text-align:left;word-break:keep-all;background:var(--white);color:var(--ink);border:2px solid var(--white);border-radius:99px;padding:9px 16px 9px 10px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.opt .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--mint);color:var(--white);font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center}
+.opt .m{margin-left:auto;font-weight:500}
 .opt:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .opts.done .opt{cursor:default;opacity:.55}
 .opts.done .opt.ok{opacity:1;color:var(--mint);font-weight:500}
-.opts.done .opt.no{opacity:1;background:transparent;color:var(--white);text-decoration:line-through}
+.opts.done .opt.no{opacity:1;background:#E5484D;border-color:#E5484D;color:var(--white);animation:shake .35s}
+.opts.done .opt.no .n{background:var(--white);color:#E5484D}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.pop{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9}
 .fb{font-size:15px;line-height:1.6;color:var(--white);margin:0}
 .label{font-size:13px;margin:0 0 6px}
 .word{line-height:1.1;margin:0 0 18px 28px;color:var(--mint);white-space:nowrap;text-shadow:-9px 0 0 rgba(42,193,188,.55),-18px 0 0 rgba(42,193,188,.28),-27px 0 0 rgba(42,193,188,.12)}
@@ -50,7 +55,7 @@ body.a .next{background:var(--mint);color:var(--white)}
 .ver{text-align:center;font-size:11px;color:var(--white);padding:0 0 10px}
 body.a .ver{color:var(--ink)}
 .hide{display:none}
-@media (prefers-reduced-motion:reduce){.word{animation:none}}
+@media (prefers-reduced-motion:reduce){.word{animation:none}.opts.done .opt.no{animation:none}}
 </style>
 </head>
 <body>
@@ -64,7 +69,7 @@ body.a .ver{color:var(--ink)}
   <div class="ver" id="ver"></div>
 </div>
 <script>
-var VERSION = 'v1.2';
+var VERSION = 'v1.3';
 var ART_COUNT = 13;
 var CARDS = [
  {t:'힘과 운동', q:'달리던 버스가 갑자기 멈추면, 몸은 왜 앞으로 쏠릴까?', g:'버스는 멈췄는데 내 몸은 왜 안 멈출까? 한 줄씩 말해봐.', w:'관성', e:'움직이던 건 계속 움직이려 하고, 멈춰 있던 건 계속 멈춰 있으려 해. 버스가 멈춰도 내 몸은 아직 달리던 중이야.', x:'종이 밑에 동전을 놓고 종이를 휙 빼봐.'},
@@ -126,7 +131,7 @@ function render(){
   if(phase==='q'){
     var art=idx<ART_COUNT?'<div class="art"><img src="art/card'+('0'+(idx+1)).slice(-2)+'.webp" alt="" width="800"></div>':'';
     var o=OPTS[idx][0],h='';
-    for(var k=0;k<o.length;k++)h+='<button class="opt" data-k="'+k+'">'+esc(o[k])+'</button>';
+    for(var k=0;k<o.length;k++)h+='<button class="opt" data-k="'+k+'"><span class="n">'+(k+1)+'</span><span class="t">'+esc(o[k])+'</span></button>';
     m.innerHTML='<p class="q big">'+esc(c.q)+'</p>'+art+'<div class="opts" id="opts">'+h+'</div><p class="fb" id="fb"></p>';
     document.getElementById('next').textContent='답 보기';
   }else{
@@ -147,10 +152,35 @@ function pick(k){
   var ans=OPTS[idx][1],box=document.getElementById('opts'),bs=box.children;
   box.className='opts done';
   for(var i=0;i<bs.length;i++){
-    if(i===ans){bs[i].classList.add('ok');bs[i].textContent='\u2713 '+bs[i].textContent;}
+    if(i===ans){bs[i].classList.add('ok');bs[i].insertAdjacentHTML('beforeend','<span class="m">\u2713</span>');}
     else if(i===k){bs[i].classList.add('no');}
   }
   document.getElementById('fb').textContent=(k===ans)?'맞아! 바로 그거야.':'아깝다! \u2713 표시한 게 정답이야.';
+  if(k===ans)fireworks();
+}
+function fireworks(){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  var cv=document.createElement('canvas'),W=cv.width=innerWidth,H=cv.height=innerHeight,g=cv.getContext('2d');
+  cv.className='pop';document.body.appendChild(cv);
+  var cols=['#FFD43B','#FF6B8B','#FFFFFF','#212121','#7B61FF','#FF9F1C'],ps=[];
+  var spots=[[W*.25,H*.35],[W*.75,H*.3],[W*.5,H*.5]];
+  spots.forEach(function(sp,si){
+    for(var i=0;i<34;i++){
+      var a=Math.random()*6.283,v=2+Math.random()*5;
+      ps.push({x:sp[0],y:sp[1],vx:Math.cos(a)*v,vy:Math.sin(a)*v,c:cols[(i+si)%cols.length],r:2+Math.random()*3,d:si*180});
+    }
+  });
+  var t0=performance.now();
+  (function f(t){
+    var el=t-t0;g.clearRect(0,0,W,H);
+    ps.forEach(function(q){
+      if(el<q.d)return;
+      q.x+=q.vx;q.y+=q.vy;q.vy+=.09;q.vx*=.985;
+      g.globalAlpha=Math.max(0,1-(el-q.d)/1300);g.fillStyle=q.c;
+      g.beginPath();g.arc(q.x,q.y,q.r,0,6.283);g.fill();
+    });
+    if(el<1700)requestAnimationFrame(f);else cv.remove();
+  })(t0);
 }
 document.getElementById('main').addEventListener('click',function(e){
   var b=e.target.closest?e.target.closest('.opt'):null;
