@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2AC1BC">
+<title>아빠랑 과학 한 판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--mint:#2AC1BC;--ink:#212121;--white:#fff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:'Noto Sans KR',system-ui,sans-serif;background:var(--mint);color:var(--ink);transition:background .2s}
+body.a{background:var(--white)}
+.app{max-width:440px;height:100dvh;margin:0 auto;display:flex;flex-direction:column;background:var(--mint);transition:background .2s;overflow:hidden}
+body.a .app{background:var(--white)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:calc(22px + env(safe-area-inset-top)) 22px 0}
+.pill{display:inline-block;font-size:13px;font-weight:500;padding:5px 13px;border-radius:99px;background:var(--white);color:var(--ink)}
+body.a .pill{background:var(--mint);color:var(--white)}
+.count{font-size:13px;color:var(--white)}
+body.a .count{color:var(--ink)}
+.main{flex:1;padding:26px 22px 12px;overflow-y:auto}
+.big{font-family:'Black Han Sans','Noto Sans KR',sans-serif;font-weight:400}
+.q{font-size:clamp(26px,8vw,34px);line-height:1.4;color:var(--white);margin:0 0 22px}
+.guess{font-size:15px;line-height:1.7;color:var(--white);margin:0}
+.label{font-size:13px;margin:0 0 6px}
+.word{line-height:1.1;margin:0 0 18px 28px;color:var(--mint);white-space:nowrap;text-shadow:-9px 0 0 rgba(42,193,188,.55),-18px 0 0 rgba(42,193,188,.28),-27px 0 0 rgba(42,193,188,.12)}
+@keyframes trail{from{text-shadow:0 0 0 rgba(42,193,188,0),0 0 0 rgba(42,193,188,0),0 0 0 rgba(42,193,188,0)}}
+.word{animation:trail .6s ease-out}
+.explain{font-size:15px;line-height:1.8;margin:0 0 18px}
+.exp{border:1.5px solid var(--mint);border-radius:16px;padding:13px 15px}
+.exp .pill{background:var(--mint);color:var(--white)}
+.exp p{font-size:15px;line-height:1.6;margin:8px 0 0}
+.bar{padding:12px 22px calc(18px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.btn{font:inherit;font-size:16px;font-weight:500;border:0;border-radius:14px;padding:14px;cursor:pointer;flex:1}
+.btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.next{background:var(--white);color:var(--ink)}
+body.a .next{background:var(--mint);color:var(--white)}
+.prev{flex:0 0 52px;background:var(--white);color:var(--mint);border:1.5px solid var(--mint);padding:12.5px 0;font-size:20px}
+.ver{text-align:center;font-size:11px;color:var(--white);padding:0 0 10px}
+body.a .ver{color:var(--ink)}
+.hide{display:none}
+@media (prefers-reduced-motion:reduce){.word{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><span class="pill" id="topic"></span><span class="count" id="count"></span></div>
+  <div class="main" id="main"></div>
+  <div class="bar">
+    <button class="btn prev hide" id="prev" aria-label="이전 카드">&#8249;</button>
+    <button class="btn next" id="next"></button>
+  </div>
+  <div class="ver" id="ver"></div>
+</div>
+<script>
+var VERSION = 'v1.0';
+var CARDS = [
+ {t:'힘과 운동', q:'달리던 버스가 갑자기 멈추면, 몸은 왜 앞으로 쏠릴까?', g:'버스는 멈췄는데 내 몸은 왜 안 멈출까? 한 줄씩 말해봐.', w:'관성', e:'움직이던 건 계속 움직이려 하고, 멈춰 있던 건 계속 멈춰 있으려 해. 버스가 멈춰도 내 몸은 아직 달리던 중이야.', x:'종이 밑에 동전을 놓고 종이를 휙 빼봐.'},
+ {t:'힘과 운동', q:'무거운 공과 가벼운 공을 같은 높이에서 떨어뜨리면 어느 쪽이 먼저 닿을까?', g:'무거운 게 더 센 힘으로 끌려가니까 먼저일까? 먼저 골라봐.', w:'중력가속도', e:'공기 저항이 거의 없으면 무게와 상관없이 같이 떨어져. 지구가 모든 물체를 똑같은 가속도로 당기기 때문이야.', x:'책 위에 종이 한 장을 올려서 같이 떨어뜨려 봐.'},
+ {t:'힘과 운동', q:'바퀴 달린 의자에 앉아 벽을 밀면, 벽은 가만히 있는데 왜 내가 뒤로 밀릴까?', g:'벽은 안 움직였는데 나만 움직인 이유가 뭘까?', w:'작용 반작용', e:'내가 벽을 미는 힘이 있으면, 벽도 똑같은 크기로 나를 반대 방향으로 밀어. 힘은 항상 둘이 한 쌍으로 나타나.', x:'바퀴 달린 의자에 앉아 벽을 밀어 봐. 반대로 벽 대신 아빠를 밀면 누가 움직일까?'},
+ {t:'힘과 운동', q:'공을 받을 때 손을 뒤로 빼면서 받으면 왜 덜 아플까?', g:'공의 속도는 같은데 왜 느낌이 다를까?', w:'충격량', e:'공을 멈추게 하는 전체 효과(충격량)는 같아. 그런데 멈추는 시간이 길어지면 손이 받는 힘은 작아져.', x:'작은 공을 손을 딱 고정해서 받을 때와 뒤로 빼면서 받을 때를 비교해 봐.'},
+ {t:'물질의 변화', q:'겨울에 입김이 하얗게 보이는 건 왜일까?', g:'입김은 수증기일까, 물방울일까?', w:'응결', e:'눈에 보이는 하얀 건 수증기가 차가운 공기를 만나 작은 물방울로 변한 거야. 진짜 수증기는 눈에 안 보여.', x:'차가운 거울이나 안경에 하~ 하고 불어 봐.'},
+ {t:'물질의 성질', q:'얼음은 왜 물 위에 둥둥 뜰까?', g:'보통 고체가 액체보다 더 단단하게 뭉쳐 있잖아. 그럼 가라앉아야 하지 않을까?', w:'밀도', e:'물은 얼면 부피가 커져서 같은 양이라도 더 가벼워져. 밀도가 작은 얼음이 밀도가 큰 물 위에 뜨는 거야.', x:'컵에 얼음을 띄우고 물에 잠긴 부분과 위로 나온 부분을 비교해 봐.'},
+ {t:'물질의 변화', q:'깎아 둔 사과는 왜 갈색으로 변할까?', g:'사과 속에서 무슨 일이 벌어진 걸까?', w:'산화', e:'사과 속 성분이 공기 중 산소와 만나 다른 물질로 변하는 거야. 이런 반응을 산화라고 해.', x:'사과 조각 두 개 중 하나에만 레몬즙을 발라 두고 10분 뒤에 비교해 봐.'},
+ {t:'물질의 성질', q:'눈 오는 날 길에 소금을 뿌리면 왜 얼음이 녹을까?', g:'소금은 뜨겁지도 않은데 어떻게 얼음을 녹일까?', w:'어는점 내림', e:'물에 소금이 섞이면 물이 얼기 시작하는 온도가 0도보다 낮아져. 그래서 0도 근처의 얼음이 녹기 시작해.', x:'얼음 위에 실을 올리고 소금을 뿌린 뒤 1~2분 기다렸다가 실을 들어 봐.'},
+ {t:'물질의 규칙성', q:'불꽃놀이는 왜 색이 여러 가지일까?', g:'불꽃 안에 물감이 들어 있는 걸까?', w:'불꽃 반응', e:'물질 속 원소마다 불에 넣으면 내는 색이 달라. 나트륨은 노란색, 구리는 청록색 같은 식이야.', x:'아빠랑 같이 가스불에 소금을 한 꼬집 떨어뜨려 봐. 불꽃이 노랗게 변할 거야. 불 조심!'},
+ {t:'생명 시스템', q:'밥을 오래 씹으면 왜 단맛이 날까?', g:'밥에는 설탕이 안 들었는데 단맛은 어디서 나왔을까?', w:'효소', e:'침 속 효소가 밥의 녹말을 단맛 나는 작은 당으로 쪼개서 그래. 효소는 몸속에서 화학 반응을 도와주는 일꾼이야.', x:'밥 한 숟갈을 1분 동안 씹으면서 맛이 어떻게 바뀌는지 느껴 봐.'},
+ {t:'생명 시스템', q:'배추에 소금을 뿌리면 왜 물이 나오면서 숨이 죽을까?', g:'소금이 물을 빨아내는 걸까, 배추가 스스로 내보내는 걸까?', w:'삼투', e:'물은 농도가 낮은 쪽에서 높은 쪽으로 이동해. 배추 밖의 소금물이 더 진해서 배추 속 물이 밖으로 빠져나오는 거야.', x:'오이를 얇게 썰어 소금을 뿌리고 10분 뒤에 물이 나오는지 봐.'},
+ {t:'생명 시스템', q:'열심히 뛰고 나면 왜 숨이 차고 심장이 빨리 뛸까?', g:'몸은 지금 뭘 더 많이 필요로 하는 걸까?', w:'세포호흡', e:'우리 몸의 세포는 산소로 포도당을 분해해서 에너지를 얻어. 운동하면 에너지가 더 필요해서 산소를 더 많이 실어 나르려고 숨과 심장이 빨라져.', x:'가만히 있을 때와 제자리 뛰기 1분 뒤에 맥박을 재서 비교해 봐.'},
+ {t:'생명 시스템', q:'식물은 밥을 안 먹는데 어떻게 자랄까?', g:'식물이 먹는 건 뭘까? 흙일까, 물일까, 다른 걸까?', w:'광합성', e:'식물은 빛 에너지로 물과 이산화탄소를 재료 삼아 스스로 양분(포도당)을 만들어. 산소는 이때 나오는 덤이야.', x:'화분 잎 하나에 검은 종이를 붙여 두고 며칠 뒤에 다른 잎과 비교해 봐.'},
+ {t:'지구 시스템', q:'한여름 해변에서 모래는 뜨거운데 바닷물은 왜 시원할까?', g:'같은 햇볕을 받았는데 왜 온도가 다를까?', w:'비열', e:'물은 열을 받아도 온도가 잘 안 올라가는 물질이야. 같은 열이면 모래는 쑥 뜨거워지고 물은 조금만 따뜻해져.', x:'컵 두 개에 물과 모래를 담아 같은 햇볕에 10분 둔 뒤 손으로 비교해 봐.'},
+ {t:'지구 시스템', q:'구름 낀 밤은 맑은 밤보다 왜 덜 추울까?', g:'구름은 하늘에 떠 있기만 한데 어떻게 온도에 영향을 줄까?', w:'온실 효과', e:'땅이 내보내는 열을 구름과 대기 속 기체가 붙잡았다가 다시 땅으로 돌려보내. 이게 지구가 따뜻한 이유와 같은 원리야.', x:'맑은 날과 흐린 날의 아침 기온을 날씨 앱에서 비교해 봐.'},
+ {t:'지구 시스템', q:'지진과 화산은 왜 특정한 곳에서만 자주 일어날까?', g:'세계 지도를 떠올려 봐. 지진이 많은 곳은 어떤 모양으로 이어져 있을까?', w:'판 구조', e:'지구 겉은 여러 개의 커다란 판으로 쪼개져 있고 판들이 아주 천천히 움직여. 판끼리 부딪히거나 스치는 경계에서 지진과 화산이 많아.', x:'세계 지진·화산 분포 지도를 찾아서 환태평양 불의 고리를 따라 그려 봐.'},
+ {t:'역학과 에너지', q:'롤러코스터는 왜 맨 처음 언덕이 제일 높을까?', g:'엔진도 없이 어떻게 계속 달릴 수 있을까?', w:'역학적 에너지 보존', e:'높은 곳에 있을수록 위치 에너지가 커. 내려오면서 그게 운동 에너지로 바뀌고, 처음 높이만큼만 다시 올라갈 수 있어.', x:'책을 기울여 경사로를 만들고 구슬을 높이 다르게 놓아 가며 얼마나 멀리 굴러가는지 봐.'},
+ {t:'역학과 에너지', q:'추운 날 손을 비비면 왜 따뜻해질까?', g:'난로도 없는데 열은 어디서 나왔을까?', w:'에너지 전환', e:'손을 움직이는 운동 에너지가 마찰 때문에 열에너지로 바뀌어. 에너지는 사라지지 않고 모양만 바뀌어.', x:'손바닥을 10초 동안 힘껏 비벼 보고 따뜻해지는 걸 느껴 봐.'},
+ {t:'전기', q:'겨울에 문고리를 잡으면 왜 찌릿할까?', g:'전기가 어디서 생긴 걸까?', w:'정전기', e:'물체끼리 문지르면 전자가 한쪽으로 옮겨가서 전기가 쌓여. 그 전기가 문고리 같은 금속에 닿는 순간 한꺼번에 흘러서 찌릿한 거야.', x:'풍선을 머리카락에 문지른 뒤 작은 종이 조각 가까이에 가져가 봐.'},
+ {t:'우주', q:'달은 왜 보름달, 반달, 초승달로 모양이 바뀔까?', g:'달이 실제로 깎이는 걸까, 아니면 다른 이유가 있을까?', w:'달의 위상', e:'달은 늘 반쪽이 햇빛을 받아 밝아. 달이 지구 주위를 도는 동안 우리가 밝은 쪽을 보는 각도가 달라져서 모양이 바뀌어 보여.', x:'어두운 방에서 손전등을 켜고, 공을 들고 내 주위를 한 바퀴 돌며 밝은 부분을 관찰해 봐.'}
+];
+var KEY='sciWithDadPos';
+var idx=0, phase='q';
+try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.i>=0&&s.i<CARDS.length){idx=s.i;phase=s.p==='a'?'a':'q';}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({i:idx,p:phase}));}catch(e){}}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function render(){
+  var c=CARDS[idx];
+  document.body.className=phase;
+  document.getElementById('topic').textContent=c.t;
+  document.getElementById('count').textContent=(idx+1)+' / '+CARDS.length;
+  document.getElementById('ver').textContent=VERSION;
+  var m=document.getElementById('main');
+  if(phase==='q'){
+    m.innerHTML='<p class="q big">'+esc(c.q)+'</p><p class="guess">'+esc(c.g)+'</p>';
+    document.getElementById('next').textContent='답 보기';
+  }else{
+    m.innerHTML='<p class="label">오늘 잡을 개념</p><p class="word big" id="word">'+esc(c.w)+'</p><p class="explain">'+esc(c.e)+'</p><div class="exp"><span class="pill">미니 실험</span><p>'+esc(c.x)+'</p></div>';
+    var w=document.getElementById('word');
+    var avail=Math.min(m.clientWidth,440)-44-28-30;
+    var len=c.w.length;
+    w.style.fontSize=Math.max(28,Math.min(72,Math.floor(avail/(len*1.02))))+'px';
+    document.getElementById('next').textContent=idx===CARDS.length-1?'처음부터 다시':'다음 카드';
+  }
+  document.getElementById('prev').classList.toggle('hide',phase==='q'||idx===0);
+  m.scrollTop=0;
+  save();
+}
+function forward(){
+  if(phase==='q'){phase='a';}
+  else{idx=(idx+1)%CARDS.length;phase='q';}
+  render();
+}
+function back(){
+  if(idx>0){idx--;phase='q';render();}
+}
+document.getElementById('next').addEventListener('click',forward);
+document.getElementById('prev').addEventListener('click',back);
+var sx=null,sy=null;
+document.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',function(e){
+  if(sx===null)return;
+  var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+  sx=null;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){ if(dx<0)forward(); else back(); }
+},{passive:true});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight')forward();
+  if(e.key==='ArrowLeft')back();
+});
+render();
+</script>
+</body>
+</html>
