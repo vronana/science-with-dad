@@ -26,7 +26,13 @@ body.a .count{color:var(--ink)}
 .q{font-size:clamp(26px,8vw,34px);line-height:1.4;color:var(--white);margin:0 0 18px;word-break:keep-all}
 .art{background:var(--white);border-radius:20px;padding:10px;margin:0 0 18px}
 .art img{display:block;width:100%;height:auto;border-radius:12px}
-.guess{font-size:15px;line-height:1.7;color:var(--white);margin:0}
+.opts{display:flex;flex-direction:column;gap:9px;margin:0 0 12px}
+.opt{font:inherit;font-size:15px;line-height:1.45;text-align:left;word-break:keep-all;background:var(--white);color:var(--ink);border:2px solid var(--white);border-radius:99px;padding:11px 18px;cursor:pointer}
+.opt:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.opts.done .opt{cursor:default;opacity:.55}
+.opts.done .opt.ok{opacity:1;color:var(--mint);font-weight:500}
+.opts.done .opt.no{opacity:1;background:transparent;color:var(--white);text-decoration:line-through}
+.fb{font-size:15px;line-height:1.6;color:var(--white);margin:0}
 .label{font-size:13px;margin:0 0 6px}
 .word{line-height:1.1;margin:0 0 18px 28px;color:var(--mint);white-space:nowrap;text-shadow:-9px 0 0 rgba(42,193,188,.55),-18px 0 0 rgba(42,193,188,.28),-27px 0 0 rgba(42,193,188,.12)}
 @keyframes trail{from{text-shadow:0 0 0 rgba(42,193,188,0),0 0 0 rgba(42,193,188,0),0 0 0 rgba(42,193,188,0)}}
@@ -58,7 +64,7 @@ body.a .ver{color:var(--ink)}
   <div class="ver" id="ver"></div>
 </div>
 <script>
-var VERSION = 'v1.1';
+var VERSION = 'v1.2';
 var ART_COUNT = 13;
 var CARDS = [
  {t:'힘과 운동', q:'달리던 버스가 갑자기 멈추면, 몸은 왜 앞으로 쏠릴까?', g:'버스는 멈췄는데 내 몸은 왜 안 멈출까? 한 줄씩 말해봐.', w:'관성', e:'움직이던 건 계속 움직이려 하고, 멈춰 있던 건 계속 멈춰 있으려 해. 버스가 멈춰도 내 몸은 아직 달리던 중이야.', x:'종이 밑에 동전을 놓고 종이를 휙 빼봐.'},
@@ -82,21 +88,46 @@ var CARDS = [
  {t:'전기', q:'겨울에 문고리를 잡으면 왜 찌릿할까?', g:'전기가 어디서 생긴 걸까?', w:'정전기', e:'물체끼리 문지르면 전자가 한쪽으로 옮겨가서 전기가 쌓여. 그 전기가 문고리 같은 금속에 닿는 순간 한꺼번에 흘러서 찌릿한 거야.', x:'풍선을 머리카락에 문지른 뒤 작은 종이 조각 가까이에 가져가 봐.'},
  {t:'우주', q:'달은 왜 보름달, 반달, 초승달로 모양이 바뀔까?', g:'달이 실제로 깎이는 걸까, 아니면 다른 이유가 있을까?', w:'달의 위상', e:'달은 늘 반쪽이 햇빛을 받아 밝아. 달이 지구 주위를 도는 동안 우리가 밝은 쪽을 보는 각도가 달라져서 모양이 바뀌어 보여.', x:'어두운 방에서 손전등을 켜고, 공을 들고 내 주위를 한 바퀴 돌며 밝은 부분을 관찰해 봐.'}
 ];
+var OPTS = [
+ [['버스가 앞으로 밀어서','내 몸은 계속 움직이려 해서','공기가 뒤에서 밀어서','몸이 가벼워져서'],1],
+ [['무거운 공이 먼저','가벼운 공이 먼저','거의 동시에','매번 달라서 알 수 없다'],2],
+ [['벽이 가만히 있어서','의자 바퀴가 미끄러워서','벽도 나를 똑같이 밀어서','내가 벽보다 가벼워서'],2],
+ [['공이 더 가벼워져서','멈추는 시간이 길어져서','공의 속도가 느려져서','손이 더 단단해져서'],1],
+ [['입김이 불이 붙어서','입김 속 먼지가 하얘서','입김이 얼음 덩어리라서','수증기가 작은 물방울로 변해서'],3],
+ [['얼음이 물보다 차가워서','얼음 속에 공기가 가득해서','얼음이 물보다 밀도가 작아서','물이 얼음을 밀어 올려서'],2],
+ [['사과가 햇빛에 타서','사과 속 물이 말라서','사과가 공기 중 산소와 만나서','사과가 차가워져서'],2],
+ [['소금이 열을 내서','소금이 얼음을 뜨겁게 데워서','소금물은 0℃보다 낮아야 얼어서','소금이 얼음을 빨아들여서'],2],
+ [['물감을 섞어서','금속마다 내는 불꽃 색이 달라서','불을 세게 붙여서','연기가 색을 입혀서'],1],
+ [['밥이 설탕으로 변해서','침 속 효소가 녹말을 당으로 바꿔서','씹는 힘이 열을 내서','침이 단맛이라서'],1],
+ [['소금이 물을 마셔서','배추가 열을 받아서','배추 속 물이 농도 높은 쪽(소금)으로 빠져나가서','배추가 소금을 녹여서'],2],
+ [['몸이 지쳐서 소리가 나서','근육이 더 많은 산소와 영양분을 써서','폐가 작아져서','피가 차가워져서'],1],
+ [['흙에서 밥을 얻어서','햇빛·물·이산화탄소로 직접 양분을 만들어서','밤에 몰래 먹어서','공기 중 영양분을 그대로 마셔서'],1],
+ [['모래가 바닷물보다 햇빛을 더 받아서','바닷물이 빛을 반사해서','바닷물이 증발하며 다 식어서','물은 같은 열에도 온도가 덜 올라서(비열이 커서)'],3],
+ [['구름이 땅의 열을 가둬 덜 식게 해서','구름이 달빛을 모아서','구름이 따뜻한 비를 내려서','구름 속에 불씨가 있어서'],0],
+ [['땅이 판처럼 여러 조각으로 움직이고 그 경계가 모여서','땅 속에 큰 동굴이 있는 곳에서만','사람이 많이 사는 곳에서만','달의 힘이 센 곳에서만'],0],
+ [['처음에 가장 힘이 세서','처음 높이에서 얻은 에너지로 다음 언덕을 넘어서','높을수록 바람이 약해서','레일이 길어서'],1],
+ [['손이 열을 만드는 피를 모아서','추위가 손을 데워서','마찰로 움직임 에너지가 열로 바뀌어서','공기가 손을 눌러서'],2],
+ [['문고리에 불이 나서','문고리가 얼어서','문고리가 자석이라서','몸에 쌓인 전기가 한꺼번에 흘러서'],3],
+ [['지구 그림자가 달을 가려서','달이 스스로 모양을 바꿔서','구름이 달을 가려서','우리가 보는 달의 햇빛 받는 면이 달라져서'],3]
+];
 var KEY='sciWithDadPos';
-var idx=0, phase='q';
+var idx=0, phase='q', picked=null;
 try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.i>=0&&s.i<CARDS.length){idx=s.i;phase=s.p==='a'?'a':'q';}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({i:idx,p:phase}));}catch(e){}}
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function render(){
   var c=CARDS[idx];
   document.body.className=phase;
+  picked=null;
   document.getElementById('topic').textContent=c.t;
   document.getElementById('count').textContent=(idx+1)+' / '+CARDS.length;
   document.getElementById('ver').textContent=VERSION;
   var m=document.getElementById('main');
   if(phase==='q'){
     var art=idx<ART_COUNT?'<div class="art"><img src="art/card'+('0'+(idx+1)).slice(-2)+'.webp" alt="" width="800"></div>':'';
-    m.innerHTML='<p class="q big">'+esc(c.q)+'</p>'+art+'<p class="guess">'+esc(c.g)+'</p>';
+    var o=OPTS[idx][0],h='';
+    for(var k=0;k<o.length;k++)h+='<button class="opt" data-k="'+k+'">'+esc(o[k])+'</button>';
+    m.innerHTML='<p class="q big">'+esc(c.q)+'</p>'+art+'<div class="opts" id="opts">'+h+'</div><p class="fb" id="fb"></p>';
     document.getElementById('next').textContent='답 보기';
   }else{
     m.innerHTML='<p class="label">오늘 잡을 개념</p><p class="word big" id="word">'+esc(c.w)+'</p><p class="explain">'+esc(c.e)+'</p><div class="exp"><span class="pill">미니 실험</span><p>'+esc(c.x)+'</p></div>';
@@ -110,6 +141,21 @@ function render(){
   m.scrollTop=0;
   save();
 }
+function pick(k){
+  if(picked!==null)return;
+  picked=k;
+  var ans=OPTS[idx][1],box=document.getElementById('opts'),bs=box.children;
+  box.className='opts done';
+  for(var i=0;i<bs.length;i++){
+    if(i===ans){bs[i].classList.add('ok');bs[i].textContent='\u2713 '+bs[i].textContent;}
+    else if(i===k){bs[i].classList.add('no');}
+  }
+  document.getElementById('fb').textContent=(k===ans)?'맞아! 바로 그거야.':'아깝다! \u2713 표시한 게 정답이야.';
+}
+document.getElementById('main').addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('.opt'):null;
+  if(b)pick(+b.getAttribute('data-k'));
+});
 function forward(){
   if(phase==='q'){phase='a';}
   else{idx=(idx+1)%CARDS.length;phase='q';}
