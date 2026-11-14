@@ -23,13 +23,15 @@ body.a .pill{background:var(--mint);color:var(--white)}
 body.a .count{color:var(--ink)}
 .main{flex:1;padding:26px 22px 12px;overflow-y:auto}
 .big{font-family:'Black Han Sans','Noto Sans KR',sans-serif;font-weight:400}
-.q{font-size:clamp(26px,8vw,34px);line-height:1.4;color:var(--white);margin:0 0 22px}
+.q{font-size:clamp(26px,8vw,34px);line-height:1.4;color:var(--white);margin:0 0 18px;word-break:keep-all}
+.art{background:var(--white);border-radius:20px;padding:10px;margin:0 0 18px}
+.art img{display:block;width:100%;height:auto;border-radius:12px}
 .guess{font-size:15px;line-height:1.7;color:var(--white);margin:0}
 .label{font-size:13px;margin:0 0 6px}
 .word{line-height:1.1;margin:0 0 18px 28px;color:var(--mint);white-space:nowrap;text-shadow:-9px 0 0 rgba(42,193,188,.55),-18px 0 0 rgba(42,193,188,.28),-27px 0 0 rgba(42,193,188,.12)}
 @keyframes trail{from{text-shadow:0 0 0 rgba(42,193,188,0),0 0 0 rgba(42,193,188,0),0 0 0 rgba(42,193,188,0)}}
 .word{animation:trail .6s ease-out}
-.explain{font-size:15px;line-height:1.8;margin:0 0 18px}
+.explain{font-size:15px;line-height:1.8;margin:0 0 18px;word-break:keep-all}
 .exp{border:1.5px solid var(--mint);border-radius:16px;padding:13px 15px}
 .exp .pill{background:var(--mint);color:var(--white)}
 .exp p{font-size:15px;line-height:1.6;margin:8px 0 0}
@@ -56,7 +58,8 @@ body.a .ver{color:var(--ink)}
   <div class="ver" id="ver"></div>
 </div>
 <script>
-var VERSION = 'v1.0';
+var VERSION = 'v1.1';
+var ART_COUNT = 13;
 var CARDS = [
  {t:'힘과 운동', q:'달리던 버스가 갑자기 멈추면, 몸은 왜 앞으로 쏠릴까?', g:'버스는 멈췄는데 내 몸은 왜 안 멈출까? 한 줄씩 말해봐.', w:'관성', e:'움직이던 건 계속 움직이려 하고, 멈춰 있던 건 계속 멈춰 있으려 해. 버스가 멈춰도 내 몸은 아직 달리던 중이야.', x:'종이 밑에 동전을 놓고 종이를 휙 빼봐.'},
  {t:'힘과 운동', q:'무거운 공과 가벼운 공을 같은 높이에서 떨어뜨리면 어느 쪽이 먼저 닿을까?', g:'무거운 게 더 센 힘으로 끌려가니까 먼저일까? 먼저 골라봐.', w:'중력가속도', e:'공기 저항이 거의 없으면 무게와 상관없이 같이 떨어져. 지구가 모든 물체를 똑같은 가속도로 당기기 때문이야.', x:'책 위에 종이 한 장을 올려서 같이 떨어뜨려 봐.'},
@@ -92,7 +95,8 @@ function render(){
   document.getElementById('ver').textContent=VERSION;
   var m=document.getElementById('main');
   if(phase==='q'){
-    m.innerHTML='<p class="q big">'+esc(c.q)+'</p><p class="guess">'+esc(c.g)+'</p>';
+    var art=idx<ART_COUNT?'<div class="art"><img src="art/card'+('0'+(idx+1)).slice(-2)+'.webp" alt="" width="800"></div>':'';
+    m.innerHTML='<p class="q big">'+esc(c.q)+'</p>'+art+'<p class="guess">'+esc(c.g)+'</p>';
     document.getElementById('next').textContent='답 보기';
   }else{
     m.innerHTML='<p class="label">오늘 잡을 개념</p><p class="word big" id="word">'+esc(c.w)+'</p><p class="explain">'+esc(c.e)+'</p><div class="exp"><span class="pill">미니 실험</span><p>'+esc(c.x)+'</p></div>';
