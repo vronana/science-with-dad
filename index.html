@@ -32,7 +32,8 @@ body.a .count{color:var(--ink)}
 .opt .m{margin-left:auto;font-weight:500}
 .opt:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .opts.done .opt{cursor:default;opacity:.55}
-.opts.done .opt.ok{opacity:1;color:var(--mint);font-weight:500}
+.opts.done .opt.ok{opacity:1;background:#FFD43B;border-color:#FFD43B;color:var(--ink);font-weight:500}
+.opts.done .opt.ok .n{background:var(--ink);color:#FFD43B}
 .opts.done .opt.no{opacity:1;background:#E5484D;border-color:#E5484D;color:var(--white);animation:shake .35s}
 .opts.done .opt.no .n{background:var(--white);color:#E5484D}
 @keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
@@ -69,7 +70,7 @@ body.a .ver{color:var(--ink)}
   <div class="ver" id="ver"></div>
 </div>
 <script>
-var VERSION = 'v1.3';
+var VERSION = 'v1.4';
 var ART_COUNT = 13;
 var CARDS = [
  {t:'힘과 운동', q:'달리던 버스가 갑자기 멈추면, 몸은 왜 앞으로 쏠릴까?', g:'버스는 멈췄는데 내 몸은 왜 안 멈출까? 한 줄씩 말해봐.', w:'관성', e:'움직이던 건 계속 움직이려 하고, 멈춰 있던 건 계속 멈춰 있으려 해. 버스가 멈춰도 내 몸은 아직 달리던 중이야.', x:'종이 밑에 동전을 놓고 종이를 휙 빼봐.'},
